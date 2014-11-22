@@ -4,7 +4,7 @@
 /**
  * PHP version 5.3
  *
- * Copyright (c) 2012 KUBO Atsuhiro <kubo@iteman.jp>,
+ * Copyright (c) 2012-2013 KUBO Atsuhiro <kubo@iteman.jp>,
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,39 +29,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package    PHPMentors_Training_Example_Symfony
- * @copyright  2012 KUBO Atsuhiro <kubo@iteman.jp>
+ * @copyright  2012-2013 KUBO Atsuhiro <kubo@iteman.jp>
  * @license    http://opensource.org/licenses/BSD-2-Clause  The BSD 2-Clause License
  * @since      File available since Release 1.0.0
  */
 
-namespace Example\UserRegistrationBundle\Repository;
+namespace Example\UserRegistrationBundle\Usecase;
 
-use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\EntityManager;
+use Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface;
+use Symfony\Component\Security\Core\Util\SecureRandomInterface;
 use PHPMentors\DomainKata\Entity\EntityInterface;
-use PHPMentors\DomainKata\Repository\RepositoryInterface;
+use PHPMentors\DomainKata\Usecase\CommandUsecaseInterface;
+
+use Example\UserRegistrationBundle\Entity\User;
 
 /**
  * @package    PHPMentors_Training_Example_Symfony
- * @copyright  2012 KUBO Atsuhiro <kubo@iteman.jp>
+ * @copyright  2012-2013 KUBO Atsuhiro <kubo@iteman.jp>
  * @copyright  2014 YAMANE Nana <shigematsu.nana@gmail.com>
  * @license    http://opensource.org/licenses/BSD-2-Clause  The BSD 2-Clause License
  * @since      Class available since Release 1.0.0
  */
-class UserRepository extends EntityRepository implements RepositoryInterface
+class UserRegistrationUsecase implements CommandUsecaseInterface
 {
     /**
-     * @param \PHPMentors\DomainKata\Entity\EntityInterface $user
+     * @var \Doctrine\ORM\EntityManager
      */
-    public function add(EntityInterface $user)
+    protected $entityManager;
+
+    /**
+     * @var \Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface
+     */
+    protected $passwordEncoder;
+
+    /**
+     * @var \Symfony\Component\Security\Core\Util\SecureRandomInterface
+     */
+    protected $secureRandom;
+
+    /**
+     * @param \Doctrine\ORM\EntityManager                                       $entityManager
+     * @param \Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface $passwordEncoder
+     * @param \Symfony\Component\Security\Core\Util\SecureRandomInterface       $secureRandom
+     */
+    public function __construct(EntityManager $entityManager, PasswordEncoderInterface $passwordEncoder, SecureRandomInterface $secureRandom)
     {
-        $this->getEntityManager()->persist($user);
+        $this->entityManager = $entityManager;
+        $this->passwordEncoder = $passwordEncoder;
+        $this->secureRandom = $secureRandom;
     }
 
     /**
-     * @param \PHPMentors\DomainKata\Entity\EntityInterface $entity
+     * @param  \PHPMentors\DomainKata\Entity\EntityInterface $user
+     * @return mixed
      */
-    public function remove(EntityInterface $entity)
+    public function run(EntityInterface $user)
     {
+        $user->setActivationKey(base64_encode($this->secureRandom->nextBytes(24)));
+        $user->setPassword($this->passwordEncoder->encodePassword($user->getPassword(), User::SALT));
+        $user->setRegistrationDate(new \DateTime());
+
+        $this->entityManager->getRepository('Example\UserRegistrationBundle\Entity\User')->add($user);
+        $this->entityManager->flush();
     }
 }
 
