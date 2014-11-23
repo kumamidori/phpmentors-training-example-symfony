@@ -42,6 +42,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use Example\UserRegistrationBundle\Entity\Factory\UserFactory;
 use Example\UserRegistrationBundle\Usecase\UserRegistrationUsecase;
+use Example\UserRegistrationBundle\Transfer\UserTransfer;
 
 /**
  * @package    PHPMentors_Training_Example_Symfony
@@ -70,7 +71,12 @@ class TestUserRegistrationCommand extends ContainerAwareCommand
         $userRegistrationUsecase = new UserRegistrationUsecase(
             $this->getContainer()->get('doctrine')->getManager(),
             $this->getContainer()->get('security.encoder_factory')->getEncoder($user),
-            $this->getContainer()->get('security.secure_random')
+            $this->getContainer()->get('security.secure_random'),
+            new UserTransfer(
+                $this->getContainer()->get('mailer'),
+                new \Swift_Message(),
+                $this->getContainer()->get('twig')
+            )
         );
         $userRegistrationUsecase->run($user);
 
