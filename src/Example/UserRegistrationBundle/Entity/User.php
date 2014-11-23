@@ -37,6 +37,8 @@
 namespace Example\UserRegistrationBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 use PHPMentors\DomainKata\Entity\EntityInterface;
 
 /**
@@ -53,6 +55,7 @@ use PHPMentors\DomainKata\Entity\EntityInterface;
  *          @ORM\UniqueConstraint(name="user_activation_key_idx", columns={"activation_key"})
  *      })
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields="email", message="このメールアドレスはすでに使用されています", groups={"registration"})
  */
 class User implements EntityInterface
 {
@@ -70,6 +73,8 @@ class User implements EntityInterface
     /**
      * @var string
      *
+     * @Assert\NotBlank(message="入力してください", groups={"registration"})
+     * @Assert\Length(min=2, max=255, minMessage="{{ limit }} 文字以上で入力してください", maxMessage="{{ limit }} 文字以下で入力してください", groups={"registration"})
      * @ORM\Column(name="last_name", type="string", length=255)
      */
     protected $lastName;
@@ -77,6 +82,8 @@ class User implements EntityInterface
     /**
      * @var string
      *
+     * @Assert\NotBlank(message="入力してください", groups={"registration"})
+     * @Assert\Length(min=2, max=255, minMessage="{{ limit }} 文字以上で入力してください", maxMessage="{{ limit }} 文字以下で入力してください", groups={"registration"})
      * @ORM\Column(name="first_name", type="string", length=255)
      */
     protected $firstName;
@@ -84,6 +91,9 @@ class User implements EntityInterface
     /**
      * @var string
      *
+     * @Assert\NotBlank(message="入力してください", groups={"registration"})
+     * @Assert\Length(min=2, max=255, minMessage="{{ limit }} 文字以上で入力してください", maxMessage="{{ limit }} 文字以下で入力してください", groups={"registration"})
+     * @Assert\Email(message="正しいメールアドレスを入力してください", groups={"registration"})
      * @ORM\Column(name="email", type="string", length=255)
      */
     protected $email;
@@ -91,6 +101,8 @@ class User implements EntityInterface
     /**
      * @var string $password
      *
+     * @Assert\NotBlank(message="入力してください", groups={"registration"})
+     * @Assert\Length(min=2, max=255, minMessage="{{ limit }} 文字以上で入力してください", maxMessage="{{ limit }} 文字以下で入力してください", groups={"registration"})
      * @ORM\Column(name="password", type="string", length=255)
      */
     protected $password;
